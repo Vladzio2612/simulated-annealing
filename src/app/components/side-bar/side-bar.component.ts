@@ -48,7 +48,7 @@ export class SideBarComponent implements OnInit, OnDestroy {
     this.finalTemperature = this.form.get('finalTemperature').value;
     this.alpha = this.form.get('coefficient').value;
     this.count = this.form.get('figureCount').value;
-    this.calculationService.initializeValues(this.initialTemperature, this.finalTemperature, this.alpha, this.count);
+    this.calculationService.initializeValues(this.initialTemperature, this.finalTemperature, this.alpha, this.count, this.form.get('function').value);
     this.calculationService.startCalculation();
   }
 

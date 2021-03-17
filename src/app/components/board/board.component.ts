@@ -22,6 +22,10 @@ export class BoardComponent implements OnInit, OnDestroy {
   canvasContext;
   form: FormGroup;
   sub: Subscription;
+  function = '';
+  iterationCounter = 0;
+  iterationWithoutChanges = 0;
+  intervalId;
 
   constructor(public calculationService: CalculationService, private timerService: TimerService) {
 
@@ -38,6 +42,7 @@ export class BoardComponent implements OnInit, OnDestroy {
     this.sub.add(this.calculationService.initialTemperature.subscribe(temp => this.initialTemperature = temp));
     this.sub.add(this.calculationService.finalTemperature.subscribe(temp => this.finalTemperature = temp));
     this.sub.add(this.calculationService.alpha.subscribe(alpha => this.coolingRate = alpha));
+    this.sub.add(this.calculationService.function.subscribe(func => this.function = func));
     this.sub.add(this.calculationService.isStart.subscribe(isStart => {
       if (isStart) {
         this.initSolve();
@@ -110,6 +115,7 @@ export class BoardComponent implements OnInit, OnDestroy {
   }
 
   init() {
+    this.iterationCounter = 0;
     for (let i = 0; i < this.cities; i++) {
       this.current[i] = [this.randomInteger(10, this.areaCanvas.clientWidth - 10),
         this.randomInteger(10, this.areaCanvas.clientHeight - 10)];
@@ -117,7 +123,7 @@ export class BoardComponent implements OnInit, OnDestroy {
 
     this.deepCopy(this.current, this.best);
     this.bestCost = this.getCost(this.best);
-    const timerId = setInterval(() => { this.solve(); }, 10);
+    this.intervalId = setInterval(() => { this.solve(); }, 10);
     // setTimeout(() => {
     //   clearInterval(timerId);
     // }, 50000);
@@ -141,14 +147,24 @@ export class BoardComponent implements OnInit, OnDestroy {
           this.deepCopy(candidate, this.current);
           currentCost = this.getCost(this.current);
         }
+
+        this.iterationWithoutChanges++;
+
         if (currentCost < this.bestCost) {
           this.deepCopy(this.current, this.best);
           this.bestCost = currentCost;
+          this.iterationWithoutChanges = 0;
           this.paint();
         }
       }
 
-      this.initialTemperature *= this.coolingRate;
+      // this.initialTemperature *= this.coolingRate;
+      ++this.iterationCounter;
+      this.initialTemperature = this.decreaseTemperature(this.initialTemperature, this.coolingRate, this.iterationCounter);
+
+      if (this.iterationWithoutChanges === 300) {
+        clearInterval(this.intervalId);
+      }
     }
   }
 
@@ -177,4 +193,32 @@ export class BoardComponent implements OnInit, OnDestroy {
     this.canvasContext.closePath();
   }
 
+  decreaseTemperature(temp: number, alpha: number, iteration: number): number {
+    switch (this.function) {
+      case 'linearFunction':
+        return this.linearFunction(temp, alpha, iteration);
+      case 'exponentialFunction':
+        return this.exponentialFunction(temp, alpha);
+      case 'inverseFunction':
+        return this.inverseFunction(temp);
+      case 'logarithmicFunction':
+        return this.logarithmicFunction(iteration);
+    }
+  }
+
+  linearFunction(temp: number, alpha: number, iteration: number): number {
+    return Math.max(temp - 0.1 * iteration, this.finalTemperature);
+  }
+
+  exponentialFunction(temp: number, alpha: number): number {
+    return alpha * temp;
+  }
+
+  inverseFunction(temp: number): number {
+    return temp / (1 + 0.001 * temp);
+  }
+
+  logarithmicFunction(iteration: number): number {
+    return 100 / Math.log(iteration + 1);
+  }
 }

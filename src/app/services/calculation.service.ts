@@ -22,14 +22,16 @@ export class CalculationService {
   cityCount = new EventEmitter<number>();
   cities = 0;
   isStart = new EventEmitter<boolean>();
+  function = new EventEmitter<string>();
   constructor(private timerService: TimerService) { }
 
-  initializeValues(initialTemperature: number, finalTemperature: number, alpha: number, cityCount: number) {
+  initializeValues(initialTemperature: number, finalTemperature: number, alpha: number, cityCount: number, func: string) {
     this.initialTemperature.emit(initialTemperature);
     this.finalTemperature.emit(finalTemperature);
     this.alpha.emit(alpha);
     this.cityCount.emit(cityCount);
     this.cities = cityCount;
+    this.function.emit(func);
   }
 
   startCalculation() {
