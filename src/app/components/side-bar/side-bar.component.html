@@ -21,7 +21,7 @@
           Це поле є обов'язковим
         </mat-error>
         <mat-error *ngIf="this.form.hasError('max', 'figureCount')">
-          Максимальна кількість 150
+          Максимальна кількість 1500
         </mat-error>
         <mat-error *ngIf="this.form.hasError('min', 'figureCount')">
           Мінімальна кількість 4
@@ -30,7 +30,7 @@
       <div class="section">
         <mat-form-field>
           <mat-label>Початкова температура</mat-label>
-          <input matInput type="number" autocomplete="off" formControlName="initialTemperature">
+          <input matInput type="number" formControlName="initialTemperature">
           <mat-error *ngIf="this.form.hasError('required', 'initialTemperature')">
             Це поле є обов'язковим
           </mat-error>
@@ -43,7 +43,7 @@
         </mat-form-field>
         <mat-form-field>
           <mat-label>Кінцева температура</mat-label>
-          <input matInput type="number" autocomplete="off" formControlName="finalTemperature">
+          <input matInput type="number" formControlName="finalTemperature">
           <mat-error *ngIf="this.form.hasError('required', 'finalTemperature')">
             Це поле є обов'язковим
           </mat-error>

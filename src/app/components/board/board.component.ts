@@ -1,4 +1,4 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CalculationService } from '../../services/calculation.service';
 import { TimerService } from '../../services/timer.service';
 import { FormControl, FormGroup } from '@angular/forms';
@@ -49,16 +49,10 @@ export class BoardComponent implements OnInit, OnDestroy {
     this.sub.unsubscribe();
   }
 
-
-
   initSolve() {
-    this.areaCanvas = document.getElementById('tsp-canvas');
+    this.areaCanvas = document.getElementById('area-canvas');
     this.canvasContext = (this.areaCanvas as HTMLCanvasElement).getContext('2d');
     this.init();
-  }
-
-  randomFloat(n) {
-    return (Math.random() * n);
   }
 
   randomInt(n) {
@@ -69,7 +63,7 @@ export class BoardComponent implements OnInit, OnDestroy {
     return Math.floor(Math.random() * (b - a) + a);
   }
 
-  deep_copy(array, to) {
+  deepCopy(array, to) {
     let i = array.length;
     while (i--) {
       to[i] = [array[i][0], array[i][1]];
@@ -91,9 +85,9 @@ export class BoardComponent implements OnInit, OnDestroy {
     return Math.sqrt((delX * delX) + (delY * delY));
   }
 
-  mutate2Opt(route, i, j) {
+  generateCandidate(route, i, j) {
     const neighbor = [];
-    this.deep_copy(route, neighbor);
+    this.deepCopy(route, neighbor);
     while (i !== j) {
       const t = neighbor[j];
       neighbor[j] = neighbor[i];
@@ -108,7 +102,7 @@ export class BoardComponent implements OnInit, OnDestroy {
     return neighbor;
   }
 
-  acceptanceProbability(currentCost, neighborCost) {
+  getAcceptanceProbability(currentCost, neighborCost) {
     if (neighborCost < currentCost) {
       return 1;
     }
@@ -121,9 +115,9 @@ export class BoardComponent implements OnInit, OnDestroy {
         this.randomInteger(10, this.areaCanvas.clientHeight - 10)];
     }
 
-    this.deep_copy(this.current, this.best);
+    this.deepCopy(this.current, this.best);
     this.bestCost = this.getCost(this.best);
-    const timerId = setInterval(() => {this.solve();}, 10);
+    const timerId = setInterval(() => { this.solve(); }, 10);
     // setTimeout(() => {
     //   clearInterval(timerId);
     // }, 50000);
@@ -131,24 +125,27 @@ export class BoardComponent implements OnInit, OnDestroy {
 
   solve() {
     if (this.initialTemperature > this.finalTemperature) {
-      let currentCost = this.getCost(this.current);
-      let k = this.randomInt(this.cities);
-      let l = (k + 1 + this.randomInt(this.cities - 2)) % this.cities;
-      if (k > l) {
-        const tmp = k;
-        k = l;
-        l = tmp;
-      }
-      const neighbor = this.mutate2Opt(this.current, k, l);
-      const neighborCost = this.getCost(neighbor);
-      if (Math.random() < this.acceptanceProbability(currentCost, neighborCost)) {
-        this.deep_copy(neighbor, this.current);
-        currentCost = this.getCost(this.current);
-      }
-      if (currentCost < this.bestCost) {
-        this.deep_copy(this.current, this.best);
-        this.bestCost = currentCost;
-        this.paint();
+      let counter = 100;
+      while (counter--) {
+        let currentCost = this.getCost(this.current);
+        let k = this.randomInt(this.cities);
+        let l = (k + 1 + this.randomInt(this.cities - 2)) % this.cities;
+        if (k > l) {
+          const tmp = k;
+          k = l;
+          l = tmp;
+        }
+        const candidate = this.generateCandidate(this.current, k, l);
+        const candidateCost = this.getCost(candidate);
+        if (Math.random() < this.getAcceptanceProbability(currentCost, candidateCost)) {
+          this.deepCopy(candidate, this.current);
+          currentCost = this.getCost(this.current);
+        }
+        if (currentCost < this.bestCost) {
+          this.deepCopy(this.current, this.best);
+          this.bestCost = currentCost;
+          this.paint();
+        }
       }
 
       this.initialTemperature *= this.coolingRate;
@@ -157,7 +154,7 @@ export class BoardComponent implements OnInit, OnDestroy {
 
   paint() {
     this.canvasContext.clearRect(0, 0, this.areaCanvas.clientWidth, this.areaCanvas.clientHeight);
-    //Cities
+    // Cities
     for (let i = 0; i < this.cities; i++) {
       this.canvasContext.beginPath();
       this.canvasContext.arc(this.best[i][0], this.best[i][1], 4, 0, 2 * Math.PI);
