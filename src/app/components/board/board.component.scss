@@ -1,5 +1,23 @@
-.wrapper {
+.board {
   display: flex;
   flex-direction: row;
-  justify-content: center;
+  justify-content: space-between;
+
+  .timer {
+    padding: 5px;
+    min-width: 60px;
+    background-color: #fc58ba;
+    height: max-content;
+    color: black;
+    border-bottom-right-radius: 50%;
+  }
+
+  .wrapper {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    width: 100%;
+  }
 }
+
+

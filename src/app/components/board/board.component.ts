@@ -3,6 +3,10 @@ import { CalculationService } from '../../services/calculation.service';
 import { TimerService } from '../../services/timer.service';
 import { FormControl, FormGroup } from '@angular/forms';
 import { Subscription } from 'rxjs';
+import {LineChartComponent} from '../line-chart/line-chart.component';
+import {ChartService} from '../../services/chart.service';
+import {Label} from 'ng2-charts';
+import {ChartDataSets} from 'chart.js';
 
 @Component({
   selector: 'app-board',
@@ -26,8 +30,14 @@ export class BoardComponent implements OnInit, OnDestroy {
   iterationCounter = 0;
   iterationWithoutChanges = 0;
   intervalId;
+  timerId;
+  timer = 0;
+  labels: Label[] = [];
+  chartDataTemperature: ChartDataSets = {
+    data: [], label: ''
+  };
 
-  constructor(public calculationService: CalculationService, private timerService: TimerService) {
+  constructor(public calculationService: CalculationService, private chartService: ChartService) {
 
   }
 
@@ -115,6 +125,10 @@ export class BoardComponent implements OnInit, OnDestroy {
   }
 
   init() {
+    this.chartService.labels.next([]);
+    this.chartService.data.next({});
+    console.log(this.function)
+    this.labels = [];
     this.iterationCounter = 0;
     for (let i = 0; i < this.cities; i++) {
       this.current[i] = [this.randomInteger(10, this.areaCanvas.clientWidth - 10),
@@ -123,10 +137,10 @@ export class BoardComponent implements OnInit, OnDestroy {
 
     this.deepCopy(this.current, this.best);
     this.bestCost = this.getCost(this.best);
-    this.intervalId = setInterval(() => { this.solve(); }, 10);
-    // setTimeout(() => {
-    //   clearInterval(timerId);
-    // }, 50000);
+
+    this.timer = 0;
+    this.timerId = setInterval(() => this.timer++, 0);
+    this.intervalId = setInterval(() => this.solve(), 0);
   }
 
   solve() {
@@ -159,12 +173,24 @@ export class BoardComponent implements OnInit, OnDestroy {
       }
 
       // this.initialTemperature *= this.coolingRate;
-      ++this.iterationCounter;
+      this.labels.push(this.iterationCounter.toString());
+      this.iterationCounter++;
+      this.chartDataTemperature.data.push(this.initialTemperature);
       this.initialTemperature = this.decreaseTemperature(this.initialTemperature, this.coolingRate, this.iterationCounter);
 
-      if (this.iterationWithoutChanges === 300) {
+      if (this.iterationWithoutChanges > 10000) {
         clearInterval(this.intervalId);
+        clearInterval(this.timerId);
+        this.chartService.labels.next(this.labels);
+        this.chartDataTemperature.label = this.function;
+        this.chartService.data.next(this.chartDataTemperature);
       }
+    } else {
+      clearInterval(this.timerId);
+      clearInterval(this.intervalId);
+      this.chartService.labels.next(this.labels);
+      this.chartDataTemperature.label = this.function;
+      this.chartService.data.next(this.chartDataTemperature);
     }
   }
 

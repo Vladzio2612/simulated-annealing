@@ -5,13 +5,15 @@ import {MatSelectModule} from '@angular/material/select';
 import {MatInputModule} from '@angular/material/input';
 import {MatSliderModule} from '@angular/material/slider';
 import {MatButtonModule} from '@angular/material/button';
+import {MatTabsModule} from '@angular/material/tabs';
+import {ChartsModule} from 'ng2-charts';
 
 import {AppComponent} from './app.component';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {SideBarComponent} from './components/side-bar/side-bar.component';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {BoardComponent} from './components/board/board.component';
-import {RowComponent} from './components/board/row/row.component';
+import { LineChartComponent } from './components/line-chart/line-chart.component';
 
 
 @NgModule({
@@ -19,7 +21,7 @@ import {RowComponent} from './components/board/row/row.component';
     AppComponent,
     SideBarComponent,
     BoardComponent,
-    RowComponent
+    LineChartComponent
   ],
   imports: [
     BrowserModule,
@@ -30,7 +32,9 @@ import {RowComponent} from './components/board/row/row.component';
     FormsModule,
     MatSliderModule,
     MatButtonModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    MatTabsModule,
+    ChartsModule
   ],
   providers: [],
   bootstrap: [AppComponent]
