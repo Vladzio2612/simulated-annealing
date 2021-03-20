@@ -126,8 +126,7 @@ export class BoardComponent implements OnInit, OnDestroy {
 
   init() {
     this.chartService.labels.next([]);
-    this.chartService.data.next({});
-    console.log(this.function)
+    this.chartService.data.next({data: [], label: ''});
     this.labels = [];
     this.iterationCounter = 0;
     for (let i = 0; i < this.cities; i++) {

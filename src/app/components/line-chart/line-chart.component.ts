@@ -1,7 +1,6 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { ChartDataSets, ChartOptions } from 'chart.js';
 import { Color, BaseChartDirective, Label } from 'ng2-charts';
-import * as pluginAnnotations from 'chartjs-plugin-annotation';
 import {ChartService} from '../../services/chart.service';
 
 @Component({
@@ -10,21 +9,16 @@ import {ChartService} from '../../services/chart.service';
   styleUrls: ['./line-chart.component.scss']
 })
 export class LineChartComponent implements OnInit {
-  public lineChartData: ChartDataSets[] = [];
+  public lineChartData: ChartDataSets[] = [
+    { data: [], label: 'Функція' }
+  ];
   public lineChartLabels: Label[] = [];
   public lineChartOptions: (ChartOptions & { annotation: any }) = {
-    annotation: {
-      annotations: [],
-    },
+    annotation: undefined,
     responsive: true,
     scales: {
       // We use this empty structure as a placeholder for dynamic theming.
-      xAxes: [{
-        id: 'x-axis-0',
-        ticks: {
-          fontColor: 'white'
-        }
-      }],
+      xAxes: [{}],
       yAxes: [
         {
           id: 'y-axis-0',
@@ -38,12 +32,12 @@ export class LineChartComponent implements OnInit {
   };
   public lineChartColors: Color[] = [
     { // red
-      backgroundColor: 'rgb(255, 165, 0)',
-      borderColor: 'rgb(255, 165, 0)',
-      pointBackgroundColor: 'rgb(255, 165, 0)',
-      pointBorderColor: 'rgb(255, 165, 0)',
-      pointHoverBackgroundColor: 'rgb(255, 165, 0)',
-      pointHoverBorderColor: 'rgb(255, 165, 0)'
+      backgroundColor: 'rgb(195,114,152, 0.6)',
+      borderColor: 'rgb(194,24,91)',
+      pointBackgroundColor: 'rgb(0,255,21)',
+      pointBorderColor: 'rgb(0,255,21)',
+      pointHoverBackgroundColor: 'rgb(0,255,21)',
+      pointHoverBorderColor: 'rgb(0,255,21)'
     }
   ];
 
@@ -53,7 +47,7 @@ export class LineChartComponent implements OnInit {
 
   ngOnInit(): void {
     this.chartService.labels.subscribe(labels => this.lineChartLabels = labels);
-    this.chartService.data.subscribe(data => this.lineChartData.push(data));
+    this.chartService.data.subscribe(data => this.lineChartData[0].data = data.data );
   }
 
   public chartHovered({ event, active }: { event: MouseEvent, active: {}[] }): void {
