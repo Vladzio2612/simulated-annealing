@@ -1,9 +1,7 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { CalculationService } from '../../services/calculation.service';
-import { TimerService } from '../../services/timer.service';
-import { FormControl, FormGroup } from '@angular/forms';
-import { Subscription } from 'rxjs';
-import {LineChartComponent} from '../line-chart/line-chart.component';
+import {Component, OnDestroy, OnInit} from '@angular/core';
+import {CalculationService} from '../../services/calculation.service';
+import {FormControl, FormGroup} from '@angular/forms';
+import {Subscription} from 'rxjs';
 import {ChartService} from '../../services/chart.service';
 import {Label} from 'ng2-charts';
 import {ChartDataSets} from 'chart.js';
@@ -19,8 +17,8 @@ export class BoardComponent implements OnInit, OnDestroy {
   finalTemperature = 0;
   coolingRate = 0.8;
   cities = 50;
-  current = [];
-  best = [];
+  currentSolution = [];
+  bestSolution = [];
   bestCost = 0;
   areaCanvas;
   canvasContext;
@@ -30,12 +28,13 @@ export class BoardComponent implements OnInit, OnDestroy {
   iterationCounter = 0;
   iterationWithoutChanges = 0;
   intervalId;
-  timerId;
-  timer = 0;
   labels: Label[] = [];
   chartDataTemperature: ChartDataSets = {
     data: [], label: ''
   };
+  startTime: Date;
+  endTime: Date;
+  processingTime: number;
 
   constructor(public calculationService: CalculationService, private chartService: ChartService) {
 
@@ -125,28 +124,30 @@ export class BoardComponent implements OnInit, OnDestroy {
   }
 
   init() {
+    this.processingTime = null;
+    this.startTime = new Date();
     this.chartService.labels.next([]);
-    this.chartService.data.next({data: [], label: ''});
+    this.chartDataTemperature = {data: [], label: ''};
+    this.chartService.data.next(this.chartDataTemperature);
     this.labels = [];
     this.iterationCounter = 0;
     for (let i = 0; i < this.cities; i++) {
-      this.current[i] = [this.randomInteger(10, this.areaCanvas.clientWidth - 10),
+      this.currentSolution[i] = [this.randomInteger(10, this.areaCanvas.clientWidth - 10),
         this.randomInteger(10, this.areaCanvas.clientHeight - 10)];
     }
 
-    this.deepCopy(this.current, this.best);
-    this.bestCost = this.getCost(this.best);
+    this.deepCopy(this.currentSolution, this.bestSolution);
+    this.bestCost = this.getCost(this.bestSolution);
 
-    this.timer = 0;
-    this.timerId = setInterval(() => this.timer++, 0);
     this.intervalId = setInterval(() => this.solve(), 0);
   }
 
   solve() {
+    let counter = 100;
     if (this.initialTemperature > this.finalTemperature) {
-      let counter = 100;
+      counter = 100;
       while (counter--) {
-        let currentCost = this.getCost(this.current);
+        let currentCost = this.getCost(this.currentSolution);
         let k = this.randomInt(this.cities);
         let l = (k + 1 + this.randomInt(this.cities - 2)) % this.cities;
         if (k > l) {
@@ -154,51 +155,51 @@ export class BoardComponent implements OnInit, OnDestroy {
           k = l;
           l = tmp;
         }
-        const candidate = this.generateCandidate(this.current, k, l);
+        const candidate = this.generateCandidate(this.currentSolution, k, l);
         const candidateCost = this.getCost(candidate);
         if (Math.random() < this.getAcceptanceProbability(currentCost, candidateCost)) {
-          this.deepCopy(candidate, this.current);
-          currentCost = this.getCost(this.current);
+          this.deepCopy(candidate, this.currentSolution);
+          currentCost = this.getCost(this.currentSolution);
         }
 
         this.iterationWithoutChanges++;
 
         if (currentCost < this.bestCost) {
-          this.deepCopy(this.current, this.best);
+          this.deepCopy(this.currentSolution, this.bestSolution);
           this.bestCost = currentCost;
           this.iterationWithoutChanges = 0;
           this.paint();
         }
       }
 
-      // this.initialTemperature *= this.coolingRate;
       this.labels.push(this.iterationCounter.toString());
       this.iterationCounter++;
       this.chartDataTemperature.data.push(this.initialTemperature);
       this.initialTemperature = this.decreaseTemperature(this.initialTemperature, this.coolingRate, this.iterationCounter);
 
       if (this.iterationWithoutChanges > 10000) {
-        clearInterval(this.intervalId);
-        clearInterval(this.timerId);
-        this.chartService.labels.next(this.labels);
-        this.chartDataTemperature.label = this.function;
-        this.chartService.data.next(this.chartDataTemperature);
+        this.finishProcess();
       }
     } else {
-      clearInterval(this.timerId);
-      clearInterval(this.intervalId);
-      this.chartService.labels.next(this.labels);
-      this.chartDataTemperature.label = this.function;
-      this.chartService.data.next(this.chartDataTemperature);
+      this.finishProcess();
     }
   }
 
-  paint() {
+  private finishProcess() {
+    clearInterval(this.intervalId);
+    this.chartService.labels.next(this.labels);
+    this.chartDataTemperature.label = this.function;
+    this.chartService.data.next(this.chartDataTemperature);
+    this.endTime = new Date();
+    this.processingTime = this.endTime.getTime() - this.startTime.getTime();
+  }
+
+  private paint() {
     this.canvasContext.clearRect(0, 0, this.areaCanvas.clientWidth, this.areaCanvas.clientHeight);
     // Cities
     for (let i = 0; i < this.cities; i++) {
       this.canvasContext.beginPath();
-      this.canvasContext.arc(this.best[i][0], this.best[i][1], 4, 0, 2 * Math.PI);
+      this.canvasContext.arc(this.bestSolution[i][0], this.bestSolution[i][1], 4, 0, 2 * Math.PI);
       this.canvasContext.fillStyle = '#00ff08';
       this.canvasContext.strokeStyle = '#00ff08';
       this.canvasContext.closePath();
@@ -209,16 +210,16 @@ export class BoardComponent implements OnInit, OnDestroy {
     // Links
     this.canvasContext.strokeStyle = '#c2185b';
     this.canvasContext.lineWidth = 2;
-    this.canvasContext.moveTo(this.best[0][0], this.best[0][1]);
+    this.canvasContext.moveTo(this.bestSolution[0][0], this.bestSolution[0][1]);
     for (let i = 0; i < this.cities - 1; i++) {
-      this.canvasContext.lineTo(this.best[i + 1][0], this.best[i + 1][1]);
+      this.canvasContext.lineTo(this.bestSolution[i + 1][0], this.bestSolution[i + 1][1]);
     }
-    this.canvasContext.lineTo(this.best[0][0], this.best[0][1]);
+    this.canvasContext.lineTo(this.bestSolution[0][0], this.bestSolution[0][1]);
     this.canvasContext.stroke();
     this.canvasContext.closePath();
   }
 
-  decreaseTemperature(temp: number, alpha: number, iteration: number): number {
+  private decreaseTemperature(temp: number, alpha: number, iteration: number): number {
     switch (this.function) {
       case 'linearFunction':
         return this.linearFunction(temp, alpha, iteration);
@@ -231,19 +232,19 @@ export class BoardComponent implements OnInit, OnDestroy {
     }
   }
 
-  linearFunction(temp: number, alpha: number, iteration: number): number {
+  private linearFunction(temp: number, alpha: number, iteration: number): number {
     return Math.max(temp - 0.1 * iteration, this.finalTemperature);
   }
 
-  exponentialFunction(temp: number, alpha: number): number {
+  private exponentialFunction(temp: number, alpha: number): number {
     return alpha * temp;
   }
 
-  inverseFunction(temp: number): number {
+  private inverseFunction(temp: number): number {
     return temp / (1 + 0.001 * temp);
   }
 
-  logarithmicFunction(iteration: number): number {
+  private logarithmicFunction(iteration: number): number {
     return 100 / Math.log(iteration + 1);
   }
 }

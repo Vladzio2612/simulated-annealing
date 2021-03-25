@@ -1,15 +1,4 @@
-import {EventEmitter, Injectable, Output} from '@angular/core';
-import {TimerService} from './timer.service';
-
-class MemberType {
-
-  solution: number[];
-  energy = 0;
-
-  constructor(length: number) {
-    this.solution = new Array(length);
-  }
-}
+import {EventEmitter, Injectable} from '@angular/core';
 
 @Injectable({
   providedIn: 'root'
@@ -23,7 +12,8 @@ export class CalculationService {
   cities = 0;
   isStart = new EventEmitter<boolean>();
   function = new EventEmitter<string>();
-  constructor(private timerService: TimerService) { }
+
+  constructor() {}
 
   initializeValues(initialTemperature: number, finalTemperature: number, alpha: number, cityCount: number, func: string) {
     this.initialTemperature.emit(initialTemperature);

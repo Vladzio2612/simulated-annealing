@@ -13,7 +13,7 @@ import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {SideBarComponent} from './components/side-bar/side-bar.component';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {BoardComponent} from './components/board/board.component';
-import { LineChartComponent } from './components/line-chart/line-chart.component';
+import {LineChartComponent} from './components/line-chart/line-chart.component';
 
 
 @NgModule({

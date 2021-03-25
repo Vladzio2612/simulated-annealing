@@ -1,16 +1,17 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import {Component, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import { ChartDataSets, ChartOptions } from 'chart.js';
 import { Color, BaseChartDirective, Label } from 'ng2-charts';
 import {ChartService} from '../../services/chart.service';
+import {Subscription} from 'rxjs';
 
 @Component({
   selector: 'app-line-chart',
   templateUrl: './line-chart.component.html',
   styleUrls: ['./line-chart.component.scss']
 })
-export class LineChartComponent implements OnInit {
+export class LineChartComponent implements OnInit, OnDestroy {
   public lineChartData: ChartDataSets[] = [
-    { data: [], label: 'Функція' }
+    { data: [], label: 'Температура' }
   ];
   public lineChartLabels: Label[] = [];
   public lineChartOptions: (ChartOptions & { annotation: any }) = {
@@ -41,17 +42,23 @@ export class LineChartComponent implements OnInit {
     }
   ];
 
+  sub: Subscription;
+
   @ViewChild(BaseChartDirective, { static: true }) chart: BaseChartDirective;
 
   constructor(private chartService: ChartService) { }
 
   ngOnInit(): void {
-    this.chartService.labels.subscribe(labels => this.lineChartLabels = labels);
-    this.chartService.data.subscribe(data => this.lineChartData[0].data = data.data );
+    this.sub = this.chartService.labels.subscribe(labels => this.lineChartLabels = labels);
+    this.sub.add(this.chartService.data.subscribe(data => this.lineChartData[0].data = data.data ));
   }
 
   public chartHovered({ event, active }: { event: MouseEvent, active: {}[] }): void {
     console.log(event, active);
+  }
+
+  ngOnDestroy(): void {
+    this.sub.unsubscribe();
   }
 
 }

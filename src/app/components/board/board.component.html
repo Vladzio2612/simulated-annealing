@@ -1,8 +1,8 @@
 <mat-tab-group mat-align-tabs="start">
   <mat-tab label="Граф">
     <div class="board">
-      <div class="timer">
-        {{ timer }} мс
+      <div class="timer" [style.visibility]="processingTime ? 'visible' : 'hidden'">
+        {{ processingTime }} мс
       </div>
       <div id="canvas-wrapper" class="wrapper">
         <canvas id="area-canvas" width="900" height="580">
