@@ -35,6 +35,9 @@ export class BoardComponent implements OnInit, OnDestroy {
   startTime: Date;
   endTime: Date;
   processingTime: number;
+  isUploadedGraph = false;
+  uploadedGraph = [];
+  isUseFile = false;
 
   constructor(public calculationService: CalculationService, private chartService: ChartService) {
 
@@ -47,16 +50,19 @@ export class BoardComponent implements OnInit, OnDestroy {
       coolRate: new FormControl(''),
       cities: new FormControl('')
     });
-    this.sub = this.calculationService.cityCount.subscribe(count => this.cities = count);
+    this.sub = this.calculationService.cityCount.subscribe(count => {
+      if (!this.isUseFile) {
+        this.cities = count;
+      }
+    });
+    this.sub.add(this.calculationService.isUseFile.subscribe(isUseFile => this.isUseFile = isUseFile));
     this.sub.add(this.calculationService.initialTemperature.subscribe(temp => this.initialTemperature = temp));
     this.sub.add(this.calculationService.finalTemperature.subscribe(temp => this.finalTemperature = temp));
     this.sub.add(this.calculationService.alpha.subscribe(alpha => this.coolingRate = alpha));
     this.sub.add(this.calculationService.function.subscribe(func => this.function = func));
-    this.sub.add(this.calculationService.isStart.subscribe(isStart => {
-      if (isStart) {
-        this.initSolve();
-      }
-    }));
+    this.sub.add(this.calculationService.isStart.subscribe(isStart => this.initSolve()));
+    this.sub.add(this.calculationService.preloadedGraph.subscribe((graph: []) => this.setGraph(graph)));
+    this.sub.add(this.calculationService.resetGraph.subscribe(() => this.resetGraph()));
   }
 
   ngOnDestroy(): void {
@@ -64,66 +70,16 @@ export class BoardComponent implements OnInit, OnDestroy {
   }
 
   initSolve() {
-    this.areaCanvas = document.getElementById('area-canvas');
-    this.canvasContext = (this.areaCanvas as HTMLCanvasElement).getContext('2d');
+    if (!this.areaCanvas && !this.canvasContext) {
+      this.areaCanvas = document.getElementById('area-canvas');
+      this.canvasContext = (this.areaCanvas as HTMLCanvasElement).getContext('2d');
+    }
+
     this.init();
   }
 
-  randomInt(n) {
-    return Math.floor(Math.random() * (n));
-  }
-
-  randomInteger(a, b) {
-    return Math.floor(Math.random() * (b - a) + a);
-  }
-
-  deepCopy(array, to) {
-    let i = array.length;
-    while (i--) {
-      to[i] = [array[i][0], array[i][1]];
-    }
-  }
-
-  getCost(route) {
-    let cost = 0;
-    for (let i = 0; i < this.cities - 1; i++) {
-      cost = cost + this.getDistance(route[i], route[i + 1]);
-    }
-    cost = cost + this.getDistance(route[0], route[this.cities - 1]);
-    return cost;
-  }
-
-  getDistance(p1, p2) {
-    const delX = p1[0] - p2[0];
-    const delY = p1[1] - p2[1];
-    return Math.sqrt((delX * delX) + (delY * delY));
-  }
-
-  generateCandidate(route, i, j) {
-    const neighbor = [];
-    this.deepCopy(route, neighbor);
-    while (i !== j) {
-      const t = neighbor[j];
-      neighbor[j] = neighbor[i];
-      neighbor[i] = t;
-
-      i = (i + 1) % this.cities;
-      if (i === j) {
-        break;
-      }
-      j = (j - 1 + this.cities) % this.cities;
-    }
-    return neighbor;
-  }
-
-  getAcceptanceProbability(currentCost, neighborCost) {
-    if (neighborCost < currentCost) {
-      return 1;
-    }
-    return Math.exp((currentCost - neighborCost) / this.initialTemperature);
-  }
-
   init() {
+    clearInterval(this.intervalId);
     this.processingTime = null;
     this.startTime = new Date();
     this.chartService.labels.next([]);
@@ -131,18 +87,21 @@ export class BoardComponent implements OnInit, OnDestroy {
     this.chartService.data.next(this.chartDataTemperature);
     this.labels = [];
     this.iterationCounter = 0;
-    for (let i = 0; i < this.cities; i++) {
-      this.currentSolution[i] = [this.randomInteger(10, this.areaCanvas.clientWidth - 10),
-        this.randomInteger(10, this.areaCanvas.clientHeight - 10)];
+
+    if (!this.isUseFile) {
+      for (let i = 0; i < this.cities; i++) {
+        this.currentSolution[i] = [this.randomInteger(10, this.areaCanvas.clientWidth - 10),
+          this.randomInteger(10, this.areaCanvas.clientHeight - 10)];
+      }
+      this.deepCopy(this.currentSolution, this.bestSolution);
     }
 
-    this.deepCopy(this.currentSolution, this.bestSolution);
     this.bestCost = this.getCost(this.bestSolution);
 
     this.intervalId = setInterval(() => this.solve(), 0);
   }
 
-  solve() {
+  private solve() {
     let counter = 100;
     if (this.initialTemperature > this.finalTemperature) {
       counter = 100;
@@ -182,6 +141,79 @@ export class BoardComponent implements OnInit, OnDestroy {
       }
     } else {
       this.finishProcess();
+    }
+  }
+
+  private randomInt(n) {
+    return Math.floor(Math.random() * (n));
+  }
+
+  private randomInteger(a, b) {
+    return Math.floor(Math.random() * (b - a) + a);
+  }
+
+  private deepCopy(array, to) {
+    let i = array.length;
+    while (i--) {
+      to[i] = [array[i][0], array[i][1]];
+    }
+  }
+
+  private getCost(route) {
+    let cost = 0;
+    for (let i = 0; i < this.cities - 1; i++) {
+      cost = cost + this.getDistance(route[i], route[i + 1]);
+    }
+    cost = cost + this.getDistance(route[0], route[this.cities - 1]);
+    return cost;
+  }
+
+  private getDistance(p1, p2) {
+    const delX = p1[0] - p2[0];
+    const delY = p1[1] - p2[1];
+    return Math.sqrt((delX * delX) + (delY * delY));
+  }
+
+  private generateCandidate(route, i, j) {
+    const neighbor = [];
+    this.deepCopy(route, neighbor);
+    while (i !== j) {
+      const t = neighbor[j];
+      neighbor[j] = neighbor[i];
+      neighbor[i] = t;
+
+      i = (i + 1) % this.cities;
+      if (i === j) {
+        break;
+      }
+      j = (j - 1 + this.cities) % this.cities;
+    }
+    return neighbor;
+  }
+
+  private getAcceptanceProbability(currentCost, neighborCost) {
+    if (neighborCost < currentCost) {
+      return 1;
+    }
+    return Math.exp((currentCost - neighborCost) / this.initialTemperature);
+  }
+
+  private setGraph(graph: []) {
+    this.cities = graph.length;
+    this.uploadedGraph = graph;
+    this.deepCopy(this.uploadedGraph, this.currentSolution);
+    this.deepCopy(this.currentSolution, this.bestSolution);
+    this.areaCanvas = document.getElementById('area-canvas');
+    this.canvasContext = (this.areaCanvas as HTMLCanvasElement).getContext('2d');
+    this.paint();
+    this.isUploadedGraph = true;
+  }
+
+  private resetGraph() {
+    if (this.isUploadedGraph && this.isUseFile) {
+      this.deepCopy(this.uploadedGraph, this.currentSolution);
+      this.deepCopy(this.currentSolution, this.bestSolution);
+      this.paint();
     }
   }
 

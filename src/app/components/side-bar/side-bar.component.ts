@@ -23,14 +23,17 @@ export class SideBarComponent implements OnInit, OnDestroy {
     ['Зворотня', 'inverseFunction'],
     ['Логарифмічна', 'logarithmicFunction']
   ]);
+  uploadedFile: File;
+  fileString: string;
+  uploadedGraph = [];
+  isUseFile = false;
 
   constructor(private calculationService: CalculationService) { }
 
   ngOnInit(): void {
     this.form = new FormGroup({
       function: new FormControl('', [Validators.required]),
-      figureCount: new FormControl('', [Validators.required,
-        Validators.min(4), Validators.max(1500)]),
+      cities: new FormControl('', [Validators.min(4), Validators.max(1500)]),
       initialTemperature: new FormControl('', [Validators.required,
         Validators.min(0), Validators.max(1500)]),
       finalTemperature: new FormControl(null, [Validators.required,
@@ -47,12 +50,37 @@ export class SideBarComponent implements OnInit, OnDestroy {
     this.initialTemperature = this.form.get('initialTemperature').value;
     this.finalTemperature = this.form.get('finalTemperature').value;
     this.alpha = this.form.get('coefficient').value;
-    this.count = this.form.get('figureCount').value;
-    this.calculationService.initializeValues(this.initialTemperature, this.finalTemperature, this.alpha, this.count, this.form.get('function').value);
+    this.count = this.form.get('cities').value;
+    this.calculationService.isUseFile.emit(this.isUseFile);
+    this.calculationService.initializeValues(this.initialTemperature, this.finalTemperature, this.alpha, this.count,
+      this.form.get('function').value);
     this.calculationService.startCalculation();
   }
 
   ngOnDestroy(): void {
     this.sub.unsubscribe();
+  }
+
+  processFile(event) {
+    this.uploadedFile = event.target.files[0];
+
+    const reader = new FileReader();
+    reader.readAsText(this.uploadedFile);
+    reader.onloadend = (e) => {
+      this.fileString = reader.result as string;
+      const strings = this.fileString.split('|');
+      for (let i = 0; i < strings.length; i++) {
+        this.uploadedGraph[i] = strings[i].split(',').map(value => Number.parseFloat(value));
+      }
+      this.calculationService.preloadGraph(this.uploadedGraph);
+      event.target.value = null;
+    };
+  }
+
+  resetUploadedGraph() {
+    if (this.uploadedGraph) {
+      this.calculationService.isUseFile.emit(this.isUseFile);
+      this.calculationService.resetGraph.next();
+    }
   }
 }

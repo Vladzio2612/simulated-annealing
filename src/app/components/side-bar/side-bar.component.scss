@@ -6,6 +6,12 @@
 
     h3 {
       text-align: center;
+      font-weight: normal;
+    }
+
+    mat-slide-toggle {
+      font-size: 12px;
+      padding-left: 20px;
     }
 
     .form {
@@ -24,9 +30,17 @@
         margin-top: 10px;
       }
 
-      button {
+      .mat-flat-button {
         border-radius: 10px;
         width: 100%;
+      }
+
+      .upload-block {
+        display: flex;
+        flex-direction: row;
+        padding-bottom: 5px;
+        width: 100%;
+        height: 35px;
       }
     }
   }
