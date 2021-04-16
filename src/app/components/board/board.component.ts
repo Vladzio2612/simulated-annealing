@@ -5,6 +5,7 @@ import {Subscription} from 'rxjs';
 import {ChartService} from '../../services/chart.service';
 import {Label} from 'ng2-charts';
 import {ChartDataSets} from 'chart.js';
+import {UtilsService} from '../../services/utils.service';
 
 @Component({
   selector: 'app-board',
@@ -38,8 +39,12 @@ export class BoardComponent implements OnInit, OnDestroy {
   isUploadedGraph = false;
   uploadedGraph = [];
   isUseFile = false;
+  isGeneratedGraph = false;
+  isCustom = false;
 
-  constructor(public calculationService: CalculationService, private chartService: ChartService) {
+  constructor(public calculationService: CalculationService,
+              private chartService: ChartService,
+              private utilsService: UtilsService) {
 
   }
 
@@ -50,19 +55,29 @@ export class BoardComponent implements OnInit, OnDestroy {
       coolRate: new FormControl(''),
       cities: new FormControl('')
     });
-    this.sub = this.calculationService.cityCount.subscribe(count => {
+    this.sub = this.calculationService.cityCount$.subscribe(count => {
       if (!this.isUseFile) {
         this.cities = count;
       }
     });
-    this.sub.add(this.calculationService.isUseFile.subscribe(isUseFile => this.isUseFile = isUseFile));
-    this.sub.add(this.calculationService.initialTemperature.subscribe(temp => this.initialTemperature = temp));
-    this.sub.add(this.calculationService.finalTemperature.subscribe(temp => this.finalTemperature = temp));
-    this.sub.add(this.calculationService.alpha.subscribe(alpha => this.coolingRate = alpha));
-    this.sub.add(this.calculationService.function.subscribe(func => this.function = func));
-    this.sub.add(this.calculationService.isStart.subscribe(isStart => this.initSolve()));
-    this.sub.add(this.calculationService.preloadedGraph.subscribe((graph: []) => this.setGraph(graph)));
-    this.sub.add(this.calculationService.resetGraph.subscribe(() => this.resetGraph()));
+    this.sub.add(this.calculationService.isCustom$.subscribe(isCustom => this.isCustom = isCustom));
+    this.sub.add(this.calculationService.isUseFile$.subscribe(isUseFile => this.isUseFile = isUseFile));
+    this.sub.add(this.calculationService.initialTemperature$.subscribe(temp => this.initialTemperature = temp));
+    this.sub.add(this.calculationService.finalTemperature$.subscribe(temp => this.finalTemperature = temp));
+    this.sub.add(this.calculationService.alpha$.subscribe(alpha => this.coolingRate = alpha));
+    this.sub.add(this.calculationService.function$.subscribe(func => this.function = func));
+    this.sub.add(this.calculationService.isStart$.subscribe(isStart => this.initSolve()));
+    this.sub.add(this.calculationService.preloadedGraph$.subscribe((graph: []) => {
+      this.isCustom = true;
+      this.setGraph(graph);
+    }));
+    this.sub.add(this.calculationService.resetGraph$.subscribe(() => this.resetGraph()));
+    this.sub.add(this.calculationService.generate$.subscribe((cities: number) => {
+      this.cities = cities;
+      this.isGeneratedGraph = true;
+      this.isCustom = true;
+      this.generateGraph();
+    }));
   }
 
   ngOnDestroy(): void {
@@ -88,17 +103,21 @@ export class BoardComponent implements OnInit, OnDestroy {
     this.labels = [];
     this.iterationCounter = 0;
 
-    if (!this.isUseFile) {
-      for (let i = 0; i < this.cities; i++) {
-        this.currentSolution[i] = [this.randomInteger(10, this.areaCanvas.clientWidth - 10),
-          this.randomInteger(10, this.areaCanvas.clientHeight - 10)];
-      }
-      this.deepCopy(this.currentSolution, this.bestSolution);
+    if (!this.isCustom) {
+      this.generateInitialSolution();
     }
 
-    this.bestCost = this.getCost(this.bestSolution);
+    this.bestCost = this.utilsService.getCost(this.bestSolution, this.cities);
 
     this.intervalId = setInterval(() => this.solve(), 0);
+  }
+
+  private generateInitialSolution() {
+    for (let i = 0; i < this.cities; i++) {
+      this.currentSolution[i] = [this.utilsService.randomInteger(10, this.areaCanvas.clientWidth - 10),
+        this.utilsService.randomInteger(10, this.areaCanvas.clientHeight - 10)];
+    }
+    this.bestSolution = [...this.currentSolution];
   }
 
   private solve() {
@@ -106,25 +125,25 @@ export class BoardComponent implements OnInit, OnDestroy {
     if (this.initialTemperature > this.finalTemperature) {
       counter = 100;
       while (counter--) {
-        let currentCost = this.getCost(this.currentSolution);
-        let k = this.randomInt(this.cities);
-        let l = (k + 1 + this.randomInt(this.cities - 2)) % this.cities;
+        let currentCost = this.utilsService.getCost(this.currentSolution, this.cities);
+        let k = this.utilsService.randomInt(this.cities);
+        let l = (k + 1 + this.utilsService.randomInt(this.cities - 2)) % this.cities;
         if (k > l) {
           const tmp = k;
           k = l;
           l = tmp;
         }
         const candidate = this.generateCandidate(this.currentSolution, k, l);
-        const candidateCost = this.getCost(candidate);
-        if (Math.random() < this.getAcceptanceProbability(currentCost, candidateCost)) {
-          this.deepCopy(candidate, this.currentSolution);
-          currentCost = this.getCost(this.currentSolution);
+        const candidateCost = this.utilsService.getCost(candidate, this.cities);
+        if (Math.random() < this.utilsService.getAcceptanceProbability(currentCost, candidateCost, this.initialTemperature)) {
+          this.currentSolution = [...candidate];
+          currentCost = this.utilsService.getCost(this.currentSolution, this.cities);
         }
 
         this.iterationWithoutChanges++;
 
         if (currentCost < this.bestCost) {
-          this.deepCopy(this.currentSolution, this.bestSolution);
+          this.bestSolution = [...this.currentSolution];
           this.bestCost = currentCost;
           this.iterationWithoutChanges = 0;
           this.paint();
@@ -144,39 +163,8 @@ export class BoardComponent implements OnInit, OnDestroy {
     }
   }
 
-  private randomInt(n) {
-    return Math.floor(Math.random() * (n));
-  }
-
-  private randomInteger(a, b) {
-    return Math.floor(Math.random() * (b - a) + a);
-  }
-
-  private deepCopy(array, to) {
-    let i = array.length;
-    while (i--) {
-      to[i] = [array[i][0], array[i][1]];
-    }
-  }
-
-  private getCost(route) {
-    let cost = 0;
-    for (let i = 0; i < this.cities - 1; i++) {
-      cost = cost + this.getDistance(route[i], route[i + 1]);
-    }
-    cost = cost + this.getDistance(route[0], route[this.cities - 1]);
-    return cost;
-  }
-
-  private getDistance(p1, p2) {
-    const delX = p1[0] - p2[0];
-    const delY = p1[1] - p2[1];
-    return Math.sqrt((delX * delX) + (delY * delY));
-  }
-
-  private generateCandidate(route, i, j) {
-    const neighbor = [];
-    this.deepCopy(route, neighbor);
+  private generateCandidate(route: any, i, j) {
+    const neighbor = [...route];
     while (i !== j) {
       const t = neighbor[j];
       neighbor[j] = neighbor[i];
@@ -191,18 +179,21 @@ export class BoardComponent implements OnInit, OnDestroy {
     return neighbor;
   }
 
-  private getAcceptanceProbability(currentCost, neighborCost) {
-    if (neighborCost < currentCost) {
-      return 1;
-    }
-    return Math.exp((currentCost - neighborCost) / this.initialTemperature);
+  generateGraph() {
+    this.areaCanvas = document.getElementById('area-canvas');
+    this.canvasContext = (this.areaCanvas as HTMLCanvasElement).getContext('2d');
+    this.generateInitialSolution();
+    this.uploadedGraph = [...this.currentSolution];
+    this.paint();
+    this.isGeneratedGraph = true;
+    this.isUploadedGraph = true;
   }
 
   private setGraph(graph: []) {
     this.cities = graph.length;
     this.uploadedGraph = graph;
-    this.deepCopy(this.uploadedGraph, this.currentSolution);
-    this.deepCopy(this.currentSolution, this.bestSolution);
+    this.currentSolution = [...this.uploadedGraph];
+    this.bestSolution = [...this.currentSolution];
     this.areaCanvas = document.getElementById('area-canvas');
     this.canvasContext = (this.areaCanvas as HTMLCanvasElement).getContext('2d');
     this.paint();
@@ -210,9 +201,9 @@ export class BoardComponent implements OnInit, OnDestroy {
   }
 
   private resetGraph() {
-    if (this.isUploadedGraph && this.isUseFile) {
-      this.deepCopy(this.uploadedGraph, this.currentSolution);
-      this.deepCopy(this.currentSolution, this.bestSolution);
+    if ((this.isUploadedGraph && this.isUseFile) || this.isGeneratedGraph) {
+      this.currentSolution = [...this.uploadedGraph];
+      this.bestSolution = [...this.currentSolution];
       this.paint();
     }
   }
@@ -254,29 +245,13 @@ export class BoardComponent implements OnInit, OnDestroy {
   private decreaseTemperature(temp: number, alpha: number, iteration: number): number {
     switch (this.function) {
       case 'linearFunction':
-        return this.linearFunction(temp, alpha, iteration);
+        return this.utilsService.linearFunction(temp, this.finalTemperature, iteration);
       case 'exponentialFunction':
-        return this.exponentialFunction(temp, alpha);
+        return this.utilsService.exponentialFunction(temp, alpha);
       case 'inverseFunction':
-        return this.inverseFunction(temp);
+        return this.utilsService.inverseFunction(temp);
       case 'logarithmicFunction':
-        return this.logarithmicFunction(iteration);
+        return this.utilsService.logarithmicFunction(iteration);
     }
-  }
-
-  private linearFunction(temp: number, alpha: number, iteration: number): number {
-    return Math.max(temp - 0.1 * iteration, this.finalTemperature);
-  }
-
-  private exponentialFunction(temp: number, alpha: number): number {
-    return alpha * temp;
-  }
-
-  private inverseFunction(temp: number): number {
-    return temp / (1 + 0.001 * temp);
-  }
-
-  private logarithmicFunction(iteration: number): number {
-    return 100 / Math.log(iteration + 1);
   }
 }

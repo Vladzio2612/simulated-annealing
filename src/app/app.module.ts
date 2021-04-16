@@ -8,6 +8,7 @@ import {MatButtonModule} from '@angular/material/button';
 import {MatTabsModule} from '@angular/material/tabs';
 import {ChartsModule} from 'ng2-charts';
 import {MatSlideToggleModule} from '@angular/material/slide-toggle';
+import {MatTooltipModule} from '@angular/material/tooltip';
 
 import {AppComponent} from './app.component';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
@@ -36,7 +37,8 @@ import {LineChartComponent} from './components/line-chart/line-chart.component';
     ReactiveFormsModule,
     MatTabsModule,
     ChartsModule,
-    MatSlideToggleModule
+    MatSlideToggleModule,
+    MatTooltipModule
   ],
   providers: [],
   bootstrap: [AppComponent]

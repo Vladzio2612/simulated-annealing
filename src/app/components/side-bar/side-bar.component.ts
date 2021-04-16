@@ -10,7 +10,6 @@ import {Subscription} from 'rxjs';
 })
 export class SideBarComponent implements OnInit, OnDestroy {
 
-  selectedValue: string;
   sub: Subscription;
   private alpha: number;
   private initialTemperature: number;
@@ -27,6 +26,8 @@ export class SideBarComponent implements OnInit, OnDestroy {
   fileString: string;
   uploadedGraph = [];
   isUseFile = false;
+  isGenerate = false;
+  isEnableStart = true;
 
   constructor(private calculationService: CalculationService) { }
 
@@ -47,11 +48,14 @@ export class SideBarComponent implements OnInit, OnDestroy {
   }
 
   startCalculation() {
+    if (!this.isGenerate && !this.isUseFile) {
+      this.calculationService.isCustom$.emit(false);
+    }
     this.initialTemperature = this.form.get('initialTemperature').value;
     this.finalTemperature = this.form.get('finalTemperature').value;
     this.alpha = this.form.get('coefficient').value;
     this.count = this.form.get('cities').value;
-    this.calculationService.isUseFile.emit(this.isUseFile);
+    this.calculationService.isUseFile$.emit(this.isUseFile);
     this.calculationService.initializeValues(this.initialTemperature, this.finalTemperature, this.alpha, this.count,
       this.form.get('function').value);
     this.calculationService.startCalculation();
@@ -78,9 +82,22 @@ export class SideBarComponent implements OnInit, OnDestroy {
   }
 
   resetUploadedGraph() {
-    if (this.uploadedGraph) {
-      this.calculationService.isUseFile.emit(this.isUseFile);
-      this.calculationService.resetGraph.next();
-    }
+    this.calculationService.isUseFile$.emit(this.isUseFile);
+    this.calculationService.resetGraph$.next();
+  }
+
+  generateGraph() {
+    this.count = this.form.get('cities').value;
+    this.calculationService.generate$.emit(this.count);
+  }
+
+  isGenerateToggle() {
+    this.isGenerate = !this.isGenerate;
+    this.isUseFile = false;
+  }
+
+  isUseFileToggle() {
+    this.isUseFile = !this.isUseFile;
+    this.isGenerate = false;
   }
 }

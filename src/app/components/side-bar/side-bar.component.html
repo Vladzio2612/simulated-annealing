@@ -2,7 +2,18 @@
   <mat-drawer class="side-nav" mode="side" opened>
     <h3>Панель налаштувань</h3>
     <hr>
-    <mat-slide-toggle color="primary" [(ngModel)]="isUseFile">Використовувати файл</mat-slide-toggle>
+    <div class="slide-toggle-block">
+      <mat-slide-toggle color="primary"
+                        [ngModel]="isUseFile"
+                        (change)="isUseFileToggle()">
+        Використовувати файл
+      </mat-slide-toggle>
+      <mat-slide-toggle color="primary"
+                        [ngModel]="isGenerate"
+                        (change)="isGenerateToggle()">
+        Генератор
+      </mat-slide-toggle>
+    </div>
     <form class="form" [formGroup]="form">
       <mat-form-field>
         <mat-label>Функція охолодження</mat-label>
@@ -85,20 +96,24 @@
         </mat-slider>
       </div>
       <div class="upload-block">
-        <button
-          mat-flat-button
-          color="primary"
-          type="button"
-          [disabled]="!isUseFile"
-          (click)="fileInput.click()"
-        >
-          Завантажити файл
-        </button>
-        <button *ngIf="uploadedFile"
+        <button type="button"
+                (click)="generateGraph()"
                 mat-icon-button
-                color="accent"
+                [disabled]="!isGenerate"
+                matTooltip="Згенерувати граф">
+          <span class="material-icons">construction</span>
+        </button>
+        <button mat-icon-button
                 type="button"
+                matTooltip="Завантажити файл"
                 [disabled]="!isUseFile"
+                (click)="fileInput.click()">
+          <span class="material-icons">upload_file</span>
+        </button>
+        <button mat-icon-button
+                type="button"
+                matTooltip="Повернути початковий граф"
+                [disabled]="!isUseFile && !isGenerate"
                 (click)="resetUploadedGraph()">
           <span class="material-icons">autorenew</span>
         </button>

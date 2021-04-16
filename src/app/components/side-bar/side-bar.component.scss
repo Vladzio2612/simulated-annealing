@@ -4,14 +4,19 @@
   .side-nav {
     min-width: 200px;
 
+    .slide-toggle-block {
+      display: flex;
+      flex-direction: column;
+
+      mat-slide-toggle {
+        font-size: 12px;
+        padding-left: 20px;
+      }
+    }
+
     h3 {
       text-align: center;
       font-weight: normal;
-    }
-
-    mat-slide-toggle {
-      font-size: 12px;
-      padding-left: 20px;
     }
 
     .form {
@@ -38,6 +43,7 @@
       .upload-block {
         display: flex;
         flex-direction: row;
+        justify-content: space-evenly;
         padding-bottom: 5px;
         width: 100%;
         height: 35px;
