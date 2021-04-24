@@ -222,29 +222,17 @@ export class BoardComponent implements OnInit, OnDestroy {
   private decreaseTemperature(temp: number, alpha: number, iteration: number): number {
     switch (this.function) {
       case 'linearFunction':
-        return this.linearFunction(temp, alpha, iteration);
+        return this.linearFunction(temp, iteration);
       case 'exponentialFunction':
         return this.exponentialFunction(temp, alpha);
-      case 'inverseFunction':
-        return this.inverseFunction(temp);
-      case 'logarithmicFunction':
-        return this.logarithmicFunction(iteration);
     }
   }
 
-  private linearFunction(temp: number, alpha: number, iteration: number): number {
+  private linearFunction(temp: number, iteration: number): number {
     return Math.max(temp - 0.1 * iteration, this.finalTemperature);
   }
 
   private exponentialFunction(temp: number, alpha: number): number {
     return alpha * temp;
-  }
-
-  private inverseFunction(temp: number): number {
-    return temp / (1 + 0.001 * temp);
-  }
-
-  private logarithmicFunction(iteration: number): number {
-    return 100 / Math.log(iteration + 1);
   }
 }

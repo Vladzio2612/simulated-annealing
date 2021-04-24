@@ -19,9 +19,7 @@ export class SideBarComponent implements OnInit, OnDestroy {
   form: FormGroup;
   functionList: Map<string, string> = new Map([
     ['Лінійна', 'linearFunction'],
-    ['Експоненційна', 'exponentialFunction'],
-    ['Зворотня', 'inverseFunction'],
-    ['Логарифмічна', 'logarithmicFunction']
+    ['Експоненційна', 'exponentialFunction']
   ]);
 
   constructor(private calculationService: CalculationService) { }
