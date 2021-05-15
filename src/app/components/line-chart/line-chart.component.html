@@ -1,14 +1,14 @@
 <div class="flex">
+  <label class="y-axis">Температура</label>
   <div class="flex-item">
-    <div style="display: block;">
-      <canvas baseChart width="800" height="250"
-              [datasets]="lineChartData"
-              [labels]="lineChartLabels"
-              [options]="lineChartOptions"
-              [plugins]="lineChartPlugins"
-              [legend]="lineChartLabels.length > 0"
-              [chartType]="'line'"
-              (chartHover)="chartHovered($event)"></canvas>
-    </div>
+    <canvas baseChart width="800" height="250"
+            [datasets]="lineChartData"
+            [labels]="lineChartLabels"
+            [options]="lineChartOptions"
+            [plugins]="lineChartPlugins"
+            [legend]="lineChartLabels.length > 0"
+            [chartType]="'line'"
+            (chartHover)="chartHovered($event)"></canvas>
+    <label class="x-axis">Номер ітерації</label>
   </div>
 </div>

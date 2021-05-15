@@ -1,6 +1,6 @@
 import {Component, OnDestroy, OnInit, ViewChild} from '@angular/core';
-import { ChartDataSets, ChartOptions } from 'chart.js';
-import { Color, BaseChartDirective, Label } from 'ng2-charts';
+import {ChartDataSets, ChartOptions} from 'chart.js';
+import {BaseChartDirective, Label} from 'ng2-charts';
 import {ChartService} from '../../services/chart.service';
 import {Subscription} from 'rxjs';
 
@@ -18,7 +18,7 @@ export class LineChartComponent implements OnInit, OnDestroy {
     ['logarithmicFunction', 'Логарифмічна']
   ]);
   public lineChartData: ChartDataSets[] = [
-    { data: [], label: '', }];
+    {data: [], label: '',}];
   public lineChartLabels: Label[] = [];
   public lineChartOptions: (ChartOptions & { annotation: any }) = {
     annotation: {},
@@ -28,7 +28,7 @@ export class LineChartComponent implements OnInit, OnDestroy {
 
   sub: Subscription;
 
-  @ViewChild(BaseChartDirective, { static: true }) chart: BaseChartDirective;
+  @ViewChild(BaseChartDirective, {static: true}) chart: BaseChartDirective;
 
   constructor(private chartService: ChartService) {
   }
@@ -59,7 +59,7 @@ export class LineChartComponent implements OnInit, OnDestroy {
     }));
   }
 
-  public chartHovered({ event, active }: { event: MouseEvent, active: {}[] }): void {
+  public chartHovered({event, active}: { event: MouseEvent, active: {}[] }): void {
     console.log(event, active);
   }
 
@@ -68,7 +68,7 @@ export class LineChartComponent implements OnInit, OnDestroy {
   }
 
   generateColor() {
-    return  'rgb(' + Math.floor(Math.random() * 255)
+    return 'rgb(' + Math.floor(Math.random() * 255)
       + ',' + Math.floor(Math.random() * 255)
       + ',' + Math.floor(Math.random() * 255) + ')';
   }
