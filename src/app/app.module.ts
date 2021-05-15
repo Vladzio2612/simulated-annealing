@@ -9,6 +9,7 @@ import {MatTabsModule} from '@angular/material/tabs';
 import {ChartsModule} from 'ng2-charts';
 import {MatSlideToggleModule} from '@angular/material/slide-toggle';
 import {MatTooltipModule} from '@angular/material/tooltip';
+import {MatTableModule} from '@angular/material/table';
 
 import {AppComponent} from './app.component';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
@@ -16,6 +17,9 @@ import {SideBarComponent} from './components/side-bar/side-bar.component';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {BoardComponent} from './components/board/board.component';
 import {LineChartComponent} from './components/line-chart/line-chart.component';
+import { ResultsComponent } from './components/results/results.component';
+import { ResultTableComponent } from './components/result-table/result-table.component';
+import {NgxChartsModule} from '@swimlane/ngx-charts';
 
 
 @NgModule({
@@ -23,23 +27,27 @@ import {LineChartComponent} from './components/line-chart/line-chart.component';
     AppComponent,
     SideBarComponent,
     BoardComponent,
-    LineChartComponent
+    LineChartComponent,
+    ResultsComponent,
+    ResultTableComponent
   ],
-  imports: [
-    BrowserModule,
-    BrowserAnimationsModule,
-    MatSidenavModule,
-    MatSelectModule,
-    MatInputModule,
-    FormsModule,
-    MatSliderModule,
-    MatButtonModule,
-    ReactiveFormsModule,
-    MatTabsModule,
-    ChartsModule,
-    MatSlideToggleModule,
-    MatTooltipModule
-  ],
+    imports: [
+        BrowserModule,
+        BrowserAnimationsModule,
+        MatSidenavModule,
+        MatSelectModule,
+        MatInputModule,
+        FormsModule,
+        MatSliderModule,
+        MatButtonModule,
+        ReactiveFormsModule,
+        MatTabsModule,
+        ChartsModule,
+        MatSlideToggleModule,
+        MatTooltipModule,
+        MatTableModule,
+        NgxChartsModule
+    ],
   providers: [],
   bootstrap: [AppComponent]
 })

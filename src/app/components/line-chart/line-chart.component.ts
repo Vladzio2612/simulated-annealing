@@ -10,47 +10,53 @@ import {Subscription} from 'rxjs';
   styleUrls: ['./line-chart.component.scss']
 })
 export class LineChartComponent implements OnInit, OnDestroy {
+
+  functionList: Map<string, string> = new Map([
+    ['linearFunction', 'Лінійна'],
+    ['exponentialFunction', 'Експоненційна'],
+    ['inverseFunction', 'Зворотня'],
+    ['logarithmicFunction', 'Логарифмічна']
+  ]);
   public lineChartData: ChartDataSets[] = [
-    { data: [], label: 'Температура' }
-  ];
+    { data: [], label: '', }];
   public lineChartLabels: Label[] = [];
   public lineChartOptions: (ChartOptions & { annotation: any }) = {
-    annotation: undefined,
-    responsive: true,
-    scales: {
-      // We use this empty structure as a placeholder for dynamic theming.
-      xAxes: [{}],
-      yAxes: [
-        {
-          id: 'y-axis-0',
-          position: 'left',
-          ticks: {
-            fontColor: 'white'
-          }
-        }
-      ]
-    }
+    annotation: {},
+    responsive: true
   };
-  public lineChartColors: Color[] = [
-    { // red
-      backgroundColor: 'rgb(195,114,152, 0.6)',
-      borderColor: 'rgb(194,24,91)',
-      pointBackgroundColor: 'rgb(0,255,21)',
-      pointBorderColor: 'rgb(0,255,21)',
-      pointHoverBackgroundColor: 'rgb(0,255,21)',
-      pointHoverBorderColor: 'rgb(0,255,21)'
-    }
-  ];
+  public lineChartPlugins = [];
 
   sub: Subscription;
 
   @ViewChild(BaseChartDirective, { static: true }) chart: BaseChartDirective;
 
-  constructor(private chartService: ChartService) { }
+  constructor(private chartService: ChartService) {
+  }
 
   ngOnInit(): void {
-    this.sub = this.chartService.labels.subscribe(labels => this.lineChartLabels = labels);
-    this.sub.add(this.chartService.data.subscribe(data => this.lineChartData[0].data = data.data ));
+    this.sub = this.chartService.labels.subscribe(labels => {
+      if (labels.length > this.lineChartLabels.length) {
+        this.lineChartLabels = labels;
+      }
+    });
+    this.sub.add(this.chartService.data.subscribe(data => {
+      if (data.data.length > 0) {
+        const color = this.generateColor();
+        data.backgroundColor = color.replace(')', ', 0.1)');
+        data.borderColor = color;
+        data.pointBorderColor = color;
+        data.pointBackgroundColor = color;
+        data.fill = false;
+        data.label = this.functionList.get(data.label);
+        if (this.lineChartData[0].data.length === 0) {
+          this.lineChartData[0].data = data.data;
+          this.lineChartData[0].label = data.label;
+          this.lineChartData[0].fill = false;
+        } else {
+          this.lineChartData.push(data);
+        }
+      }
+    }));
   }
 
   public chartHovered({ event, active }: { event: MouseEvent, active: {}[] }): void {
@@ -61,4 +67,9 @@ export class LineChartComponent implements OnInit, OnDestroy {
     this.sub.unsubscribe();
   }
 
+  generateColor() {
+    return  'rgb(' + Math.floor(Math.random() * 255)
+      + ',' + Math.floor(Math.random() * 255)
+      + ',' + Math.floor(Math.random() * 255) + ')';
+  }
 }

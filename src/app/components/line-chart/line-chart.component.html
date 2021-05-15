@@ -1,12 +1,12 @@
 <div class="flex">
   <div class="flex-item">
     <div style="display: block;">
-      <canvas baseChart width="400" height="300"
+      <canvas baseChart width="800" height="250"
               [datasets]="lineChartData"
               [labels]="lineChartLabels"
               [options]="lineChartOptions"
-              [colors]="lineChartColors"
-              [legend]="false"
+              [plugins]="lineChartPlugins"
+              [legend]="lineChartLabels.length > 0"
               [chartType]="'line'"
               (chartHover)="chartHovered($event)"></canvas>
     </div>

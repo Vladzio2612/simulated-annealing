@@ -21,6 +21,7 @@
     "@angular/platform-browser": "~9.0.6",
     "@angular/platform-browser-dynamic": "~9.0.6",
     "@angular/router": "~9.0.6",
+    "@swimlane/ngx-charts": "^17.0.1",
     "chart.js": "^2.9.4",
     "chartjs-plugin-annotation": "^0.5.7",
     "ng2-charts": "^2.4.2",

@@ -6,6 +6,7 @@ import {ChartService} from '../../services/chart.service';
 import {Label} from 'ng2-charts';
 import {ChartDataSets} from 'chart.js';
 import {UtilsService} from '../../services/utils.service';
+import {ResultService} from '../../services/result.service';
 
 @Component({
   selector: 'app-board',
@@ -44,7 +45,8 @@ export class BoardComponent implements OnInit, OnDestroy {
 
   constructor(public calculationService: CalculationService,
               private chartService: ChartService,
-              private utilsService: UtilsService) {
+              private utilsService: UtilsService,
+              private resultService: ResultService) {
 
   }
 
@@ -215,6 +217,8 @@ export class BoardComponent implements OnInit, OnDestroy {
     this.chartService.data.next(this.chartDataTemperature);
     this.endTime = new Date();
     this.processingTime = this.endTime.getTime() - this.startTime.getTime();
+    this.resultService.results.emit({ method: this.function, time: this.processingTime,
+      iterations: this.iterationCounter * 100, cityCount: this.cities, distance: Math.round(this.bestCost) });
   }
 
   private paint() {
