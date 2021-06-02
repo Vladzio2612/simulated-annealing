@@ -34,13 +34,13 @@
                [required]="!isUseFile"
                [readonly]="isUseFile"
                formControlName="cities">
-        <mat-error *ngIf="this.form.hasError('required', 'figureCount')">
+        <mat-error *ngIf="this.form.hasError('required', 'cities')">
           Це поле є обов'язковим
         </mat-error>
-        <mat-error *ngIf="this.form.hasError('max', 'figureCount')">
+        <mat-error *ngIf="this.form.hasError('max', 'cities')">
           Максимальна кількість 1500
         </mat-error>
-        <mat-error *ngIf="this.form.hasError('min', 'figureCount')">
+        <mat-error *ngIf="this.form.hasError('min', 'cities')">
           Мінімальна кількість 4
         </mat-error>
       </mat-form-field>

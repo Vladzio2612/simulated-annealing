@@ -59,10 +59,6 @@ export class LineChartComponent implements OnInit, OnDestroy {
     }));
   }
 
-  public chartHovered({event, active}: { event: MouseEvent, active: {}[] }): void {
-    console.log(event, active);
-  }
-
   ngOnDestroy(): void {
     this.sub.unsubscribe();
   }
